@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+// Falls types.ts im Hauptordner liegt und Hecklers im components-Ordner:
 import { HecklerInteraction } from '../types';
 import { Skull, Zap, Send, Loader2, RefreshCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-// Korrekter Import für die aktuelle Google AI SDK
+// Korrekter SDK Import
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const initialHecklers: HecklerInteraction[] = [
@@ -22,10 +23,12 @@ const Hecklers: React.FC = () => {
 
     setIsLoading(true);
     try {
-      // Zugriff auf den Key über import.meta.env (Vite Standard)
-      const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || "");
+      // @ts-ignore - Erzwingt den Zugriff auf env, auch wenn TS meckert
+      const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY || "";
+      const genAI = new GoogleGenerativeAI(apiKey);
+      
       const model = genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash", // Stabilere Modellbezeichnung
+        model: "gemini-1.5-flash", 
         generationConfig: {
           responseMimeType: "application/json",
         }
