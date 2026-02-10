@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { HecklerInteraction } from '../types';
 import { Skull, Zap, Send, Loader2, RefreshCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-// Fixed: Using correct imports and Type enum from @google/genai as per guidelines
-import { GoogleGenAI, Type } from "@google/genai";
+// Korrekter Import für die aktuelle Google AI SDK
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const initialHecklers: HecklerInteraction[] = [
   { id: '1', hecklerQuote: "Du bist nicht lustig!", kikoComeback: "Deine Frau fand mich gestern Nacht extrem lustig. Sie hat über meine Witze UND deine Performance gelacht.", damageRating: 5 },
@@ -23,37 +22,33 @@ const Hecklers: React.FC = () => {
 
     setIsLoading(true);
     try {
-      // Fixed: Creating new GoogleGenAI instance for fresh API key and using correct Type enum in responseSchema
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: `Heckler says: "${userInput}"`,
-        config: {
-          systemInstruction: "Du bist KIKO, ein energiegeladener Schweizer Komiker auf deiner 'Nöd Dä Hellscht' Tour. Du bist selbstironisch, hast aber messerscharfe, nukleare Konter für Heckler parat. Dein Stil ist frech, lustig und referenziert gelegentlich Schweizer Dinge wie Kühe, Käse oder die Alpen. ANTWORTETE IMMER AUF DEUTSCH (gerne mit Schweizer Einschlag). Fass dich kurz (unter 30 Wörter). Gib außerdem eine 'Zerstörungs-Bewertung' von 1 bis 5 an.",
+      // Zugriff auf den Key über import.meta.env (Vite Standard)
+      const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || "");
+      const model = genAI.getGenerativeModel({ 
+        model: "gemini-1.5-flash", // Stabilere Modellbezeichnung
+        generationConfig: {
           responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              comeback: { type: Type.STRING },
-              rating: { type: Type.NUMBER, description: "Zerstörungsgrad von 1 bis 5" }
-            },
-            required: ["comeback", "rating"]
-          }
-        },
+        }
       });
 
-      // Fixed: response.text is a property, and we trim it before parsing
-      const jsonStr = response.text?.trim() || "{}";
-      const data = JSON.parse(jsonStr);
+      const prompt = `Du bist KIKO, ein energiegeladener Schweizer Komiker auf deiner 'Nöd Dä Hellscht' Tour. 
+      Du bist selbstironisch, hast aber messerscharfe Konter parat. 
+      Antworte auf diesen Heckler: "${userInput}". 
+      Gib das Ergebnis als JSON zurück mit den Feldern "comeback" (String) und "rating" (Zahl 1-5).`;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const data = JSON.parse(response.text());
+
       setAiRoast({
         quote: userInput,
-        response: data.comeback || "Mein Gehirn hat gerade einen Kurzschluss, versuch's nochmal!",
+        response: data.comeback || "Hopp Schwiiz! Mein Gehirn macht gerade Pause.",
         rating: data.rating || 1
       });
       setUserInput("");
     } catch (error) {
       console.error("Roast failed:", error);
-      alert("Der Server ist gerade so hell wie Kiko – also gar nicht. Probier's gleich nochmal!");
+      alert("Fehler beim Roasten! Kiko braucht wohl erst ein Fondue.");
     } finally {
       setIsLoading(false);
     }
@@ -83,7 +78,7 @@ const Hecklers: React.FC = () => {
                       <Zap size={14} /> Heckler laberte:
                    </div>
                    <div className="bg-sky/10 border-l-4 border-sky p-4 italic text-2xl text-jet font-body font-medium">
-                     "{item.hecklerQuote}"
+                      "{item.hecklerQuote}"
                    </div>
                 </div>
 
@@ -92,7 +87,7 @@ const Hecklers: React.FC = () => {
                       Kikos atomarer Konter <Zap size={14} />
                    </div>
                    <div className="bg-banana border-4 border-jet p-4 text-2xl font-black text-jet text-right shadow-flyer transform translate-x-2">
-                     "{item.kikoComeback}"
+                      "{item.kikoComeback}"
                    </div>
                 </div>
 
@@ -112,7 +107,6 @@ const Hecklers: React.FC = () => {
             ))}
           </div>
 
-          {/* AI ROAST GENERATOR SECTION */}
           <div className="max-w-4xl mx-auto">
             <div className="bg-jet border-8 border-banana shadow-[20px_20px_0px_0px_rgba(248,228,52,0.3)] p-8 md:p-12 relative overflow-hidden">
                <div className="absolute top-0 right-0 opacity-10 -rotate-12 pointer-events-none">
@@ -121,7 +115,7 @@ const Hecklers: React.FC = () => {
 
                <div className="relative z-10 text-center mb-10">
                   <h3 className="font-display text-5xl md:text-7xl text-banana mb-2 uppercase italic">NUKLEARER ROAST GENERATOR</h3>
-                  <p className="font-comic text-xl text-white/70 italic">"Trau dich, mich zu beleidigen. Ich hab nichts zu verlieren (außer meine letzte Gehirnzelle)."</p>
+                  <p className="font-comic text-xl text-white/70 italic">"Trau dich, mich zu beleidigen. Ich hab nichts zu verlieren."</p>
                </div>
 
                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
@@ -134,9 +128,6 @@ const Hecklers: React.FC = () => {
                         className="w-full bg-white border-4 border-jet p-6 text-jet font-bold text-xl h-40 focus:outline-none focus:ring-4 ring-banana/50 placeholder:text-gray-300"
                         required
                       />
-                      <div className="absolute -bottom-4 -left-4 bg-vest text-white p-2 border-2 border-jet font-display text-sm rotate-3">
-                        INPUT: GEFÄHRLICH
-                      </div>
                     </div>
                     
                     <button 
@@ -144,15 +135,7 @@ const Hecklers: React.FC = () => {
                       disabled={isLoading}
                       className="w-full bg-banana text-jet font-display text-4xl py-6 border-4 border-white shadow-flyer hover:bg-white hover:scale-[1.02] transition-all flex items-center justify-center gap-3 disabled:opacity-50 uppercase"
                     >
-                      {isLoading ? (
-                        <>
-                          <Loader2 size={32} className="animate-spin" /> KIKO SUCHT WÖRTER...
-                        </>
-                      ) : (
-                        <>
-                          <Send size={32} /> MICH ZERSTÖREN
-                        </>
-                      )}
+                      {isLoading ? <Loader2 size={32} className="animate-spin" /> : <><Send size={32} /> MICH ZERSTÖREN</>}
                     </button>
                   </form>
 
@@ -164,34 +147,18 @@ const Hecklers: React.FC = () => {
                           animate={{ opacity: 1, x: 0 }}
                           className="bg-white border-4 border-jet p-6 shadow-flyer relative"
                         >
-                          <button 
-                            onClick={() => setAiRoast(null)}
-                            className="absolute -top-4 -right-4 bg-jet text-white p-2 rounded-full border-2 border-white hover:bg-vest transition-colors"
-                          >
+                          <button onClick={() => setAiRoast(null)} className="absolute -top-4 -right-4 bg-jet text-white p-2 rounded-full border-2 border-white hover:bg-vest transition-colors">
                             <RefreshCcw size={20} />
                           </button>
-                          
-                          <div className="mb-4">
-                             <p className="text-gray-400 font-bold text-xs uppercase mb-1">Deine Schwäche:</p>
-                             <p className="text-jet italic font-medium border-l-2 border-sky pl-3">"{aiRoast.quote}"</p>
-                          </div>
-
                           <div className="bg-banana border-4 border-jet p-4 mb-6">
-                             <p className="text-jet font-black text-2xl leading-tight">
-                               "{aiRoast.response}"
-                             </p>
+                             <p className="text-jet font-black text-2xl">"{aiRoast.response}"</p>
                           </div>
-
                           <div className="flex items-center justify-between bg-jet/5 p-3">
                              <span className="text-jet font-display text-lg uppercase">Zerstörungsgrad:</span>
                              <div className="flex gap-1">
-                                {[...Array(5)].map((_, i) => (
-                                  <Skull 
-                                    key={i} 
-                                    size={24} 
-                                    className={`${i < aiRoast.rating ? 'text-vest fill-vest' : 'text-jet/10'}`} 
-                                  />
-                                ))}
+                               {[...Array(5)].map((_, i) => (
+                                 <Skull key={i} size={24} className={`${i < aiRoast.rating ? 'text-vest fill-vest' : 'text-jet/10'}`} />
+                               ))}
                              </div>
                           </div>
                         </motion.div>
@@ -205,15 +172,6 @@ const Hecklers: React.FC = () => {
                   </div>
                </div>
             </div>
-          </div>
-          
-          <div className="mt-20 text-center">
-             <p className="font-comic text-banana text-2xl mb-4 italic rotate-1">
-                "Willst du wirklich von Kiko zerstört werden?"
-             </p>
-             <p className="text-white/50 text-sm font-bold uppercase tracking-[0.3em]">
-                Powered by Nuclear Intelligence & Gemini 3
-             </p>
           </div>
         </div>
     </section>
