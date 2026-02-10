@@ -1,33 +1,20 @@
-# 🎭 Kikomedy v2
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-Willkommen beim **Kikomedy Empire**! Diese Website nutzt die Power von Google Gemini AI, um interaktive Comedy-Erlebnisse zu generieren.
+# Run and deploy your AI Studio app
 
-## 🚀 Features
-* **AI Heckler:** Interaktive KI-Komponenten für schlagfertige Antworten.
-* **Gemini Integration:** Powered by `@google/generative-ai`.
-* **Vite + React:** Ultraschnelles Frontend mit TypeScript-Support.
+This contains everything you need to run your app locally.
 
-## 🛠 Installation & Setup
+View your app in AI Studio: https://ai.studio/apps/drive/1kbFrZLvYm9SQ-Dh9gRu99hXdVzQRduqq
 
-1.  **Repository klonen:**
-    ```bash
-    git clone [https://github.com/mojominerals/kikov2.git](https://github.com/mojominerals/kikov2.git)
-    ```
-2.  **Abhängigkeiten installieren:**
-    ```bash
-    npm install
-    ```
-3.  **Lokal starten:**
-    ```bash
-    npm run dev
-    ```
+## Run Locally
 
-## 🌐 Deployment auf Vercel
+**Prerequisites:**  Node.js
 
-Dieses Projekt ist für das Deployment auf [Vercel](https://vercel.com) optimiert.
 
-**Wichtig:** Du musst eine Umgebungsvariable (Environment Variable) in Vercel hinzufügen:
-* `GOOGLE_GENERATIVE_AI_API_KEY`: Dein API-Schlüssel aus dem [Google AI Studio](https://aistudio.google.com/).
-
-## ⚖️ Lizenz
-MIT License - Erstellt von [mojominerals](https://github.com/mojominerals)
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
